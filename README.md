@@ -1,34 +1,38 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Stripe integration POC
 
-## Getting Started
+This repo is a proof-of-concept for [Clerk](https://clerk.dev)'s integration with Stripe.
 
-First, run the development server:
+## Goal
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+We want to make it easier to integrate Stripe.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Since Clerk is responsible for Authentication, User management, and Organization management, we can solve many tedious aspects of integrating Stripe, including:
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+1. Creating and syncing Stripe Customer objects with Clerk User and Organization objects
+2. Starting a Checkout Session for the currently signed in User (or their Organization)
+3. Starting a Billing Portal Session for the currently signed in User (or their Organization)
+4. Retrieving Stripe Customer data (e.g. subscriptions, purchase history, payment methods) for the currently signed in User (or their Organization)
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+## Philosophy
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+This proof-of-concept is focused on security and developer experience, not on performance or reliability.
 
-## Learn More
+- From a security perspective, we want to ensure that strong access control measures are in place, or at least feasible. As an example, a signed in user should not be able to generate a Checkout Session for a different user.
+- From a developer experience perspective, we're particularly interested in finding a flexible hook design that works across many different types of businesses.
 
-To learn more about Next.js, take a look at the following resources:
+We have a strong preference for solutions that are complementary to Stripe's API, instead of ones that only use Stripe for its payments primitives. As an example, we prefer to leverage Stripe's existing Product and Price modeling instead of creating our own.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Lastly, this is meant to be fun. Code will not be reviewed except for security and developer experience issues. Expect ts-ignores and console.logs littered about.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Future
 
-## Deploy on Vercel
+Our final integration with Stripe will ask developers to connect their Stripe account in Clerk's dashboard, and the functionality in this repo will move to our core product:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- The React hooks in [`hooks`](./hooks) will be added to Clerk's React SDKs.
+- The API endpoints in [`pages/api/stripe/*`](./pages/api/stripe) will be added to Clerk's Frontend API.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Contributing
+
+Anyone can run this repo by creating a `.env.local` file (rename the example).
+
+Pull requests, issues, and discussions are all welcome. If you'd like to contribute a pull request, we recommend starting a discussion first.
