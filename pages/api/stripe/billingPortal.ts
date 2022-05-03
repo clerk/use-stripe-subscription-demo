@@ -7,12 +7,10 @@ const handler = requireAuth(async (req, res) => {
     clerkUserId: req.auth.userId,
   });
 
-  const session = await stripe.checkout.sessions.create({
+  // Authenticate your user.
+  const session = await stripe.billingPortal.sessions.create({
     customer: customerId,
-    success_url: "http://localhost:3000",
-    cancel_url: "http://localhost:3000",
-    line_items: req.body.line_items,
-    mode: "subscription",
+    return_url: "http://localhost:3000",
   });
 
   res.json(session);

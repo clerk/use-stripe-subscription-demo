@@ -5,17 +5,27 @@ import {
   SignedOut,
   RedirectToSignIn,
 } from "@clerk/nextjs";
+import { SWRConfig } from "swr";
 
 function MyApp({ Component, pageProps }) {
   return (
-    <ClerkProvider>
-      <SignedIn>
-        <Component {...pageProps} />
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-    </ClerkProvider>
+    <SWRConfig
+      value={{
+        fetcher: async (args) => {
+          const data = await fetch(args);
+          return await data.json();
+        },
+      }}
+    >
+      <ClerkProvider>
+        <SignedIn>
+          <Component {...pageProps} />
+        </SignedIn>
+        <SignedOut>
+          <RedirectToSignIn />
+        </SignedOut>
+      </ClerkProvider>
+    </SWRConfig>
   );
 }
 

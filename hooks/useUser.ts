@@ -6,15 +6,49 @@
  */
 
 import { useUser } from "@clerk/nextjs";
+import useSWR from "swr";
+import Stripe from "stripe";
 
+// Be warned: Lots of TS wrestling to make the monekey patch work
 export default function useUserMonkeyPatch() {
   const standard = useUser();
+  const { data: customer, error } = useSWR<Stripe.Response<Stripe.Customer>>(
+    "/api/stripe/customer"
+  );
 
   if (!standard.isLoaded || !standard.isSignedIn) {
-    return standard;
+    return {
+      ...standard,
+      redirectToCheckout: undefined,
+      stripeCustomer: undefined,
+    } as
+      | {
+          isLoaded: false;
+          isSignedIn: undefined;
+          redirectToCheckout: undefined;
+          stripeCustomer: undefined;
+        }
+      | {
+          isLoaded: true;
+          isSignedIn: false;
+          redirectToCheckout: undefined;
+          stripeCustomer: undefined;
+        };
   }
 
-  const redirectToCheckout = async (args: { prices: string[] }) => {
+  // Also wait for customer to load
+  if (!customer) {
+    return {
+      isLoaded: false,
+    } as {
+      isLoaded: false;
+      isSignedIn: undefined;
+      redirectToCheckout: undefined;
+      stripeCustomer: undefined;
+    };
+  }
+
+  const redirectToCheckout = async (args: any) => {
     const sessionResponse = await fetch("/api/stripe/checkout", {
       method: "post",
       headers: {
@@ -26,5 +60,23 @@ export default function useUserMonkeyPatch() {
     window.location.href = session.url;
   };
 
-  return { standard, redirectToCheckout };
+  const redirectToBillingPortal = async () => {
+    const sessionResponse = await fetch("/api/stripe/billingPortal", {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const session = await sessionResponse.json();
+    window.location.href = session.url;
+  };
+
+  // Todo: find a better way than mashing stripeCustomer on
+  // Wait until we determine what we actually need off it
+  return {
+    ...standard,
+    redirectToCheckout,
+    redirectToBillingPortal,
+    stripeCustomer: customer,
+  };
 }
