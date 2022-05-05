@@ -9,6 +9,8 @@ export default function Home() {
     isSignedIn,
     redirectToCheckout,
     redirectToBillingPortal,
+    connectFinancialAccounts,
+    financialAccounts,
     stripeCustomer,
   } = useUser();
   const { products, error } = useProducts();
@@ -42,6 +44,7 @@ export default function Home() {
 
       <h1>Clerk - Stripe integration POC</h1>
 
+      <h2>Plan</h2>
       {productSubscriptions.length === 0 ? (
         <ProductList
           products={products}
@@ -56,16 +59,34 @@ export default function Home() {
           <button onClick={() => redirectToBillingPortal()}>Manage</button>
         </>
       )}
+
+      <h2>Financial accounts</h2>
+      <FinancialAccountsList financialAccounts={financialAccounts} />
+
+      <button onClick={() => connectFinancialAccounts()}>Connect</button>
     </>
   );
 }
 
+const FinancialAccountsList = ({ financialAccounts }) => {
+  return financialAccounts.data.map(
+    ({ id, institution_name, last4, balance, ...rest }) => (
+      <div key={id}>
+        <h4>
+          {institution_name} - Last 4: {last4}
+        </h4>
+        <div>{balance && balance.cash && JSON.stringify(balance.cash)}</div>
+      </div>
+    )
+  );
+};
+
 const ProductList = ({ products, redirectToCheckout }) => {
   return products.map(({ product, price }) => (
     <div key={product.id}>
-      <h2>
+      <h4>
         {product.name} - {price.unit_amount} {price.currency}
-      </h2>
+      </h4>
       <button
         onClick={() =>
           redirectToCheckout({
