@@ -1,19 +1,23 @@
-import stripe from "../../../stripe";
 import { requireAuth, users } from "@clerk/nextjs/api";
+import { subscriptionHandler, stripeApiClient } from "use-stripe-subscription";
 
 const handler = requireAuth(async (req, res) => {
+  // Determine the Stripe Customer ID for this request
+  // use-stripe-subscription doesn't care how you implement this...
+  // you can make it specific to the user, or specific to their organization
+  // but we implemented it here with Clerk for user management
   const customerId = await findOrCreateCustomerId({
     clerkUserId: req.auth.userId,
   });
+
   res.json(
-    await stripe.customers.retrieve(customerId, { expand: ["subscriptions"] })
+    await subscriptionHandler({ customerId, query: req.query, body: req.body })
   );
 });
 
 export default handler;
 
-// Colin was a rails dev and it shows
-export const findOrCreateCustomerId = async ({
+const findOrCreateCustomerId = async ({
   clerkUserId,
 }: {
   clerkUserId: string;
@@ -23,7 +27,7 @@ export const findOrCreateCustomerId = async ({
     return user.publicMetadata.stripeCustomerId as string;
   }
 
-  const customerCreate = await stripe.customers.create(
+  const customerCreate = await stripeApiClient.customers.create(
     {
       name: user.firstName + " " + user.lastName,
       email: user.emailAddresses.find(
@@ -34,7 +38,7 @@ export const findOrCreateCustomerId = async ({
       },
     },
     {
-      idempotencyKey: "A" + user.id,
+      idempotencyKey: user.id,
     }
   );
   user = await users.updateUser(user.id, {

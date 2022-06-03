@@ -1,103 +1,53 @@
+import { UserButton } from "@clerk/nextjs";
 import Head from "next/head";
-import Stripe from "stripe";
-import useProducts from "../hooks/useProducts";
-import useUser from "../hooks/useUser";
+import { Gate, useSubscription } from "use-stripe-subscription";
 
 export default function Home() {
   const {
     isLoaded,
-    isSignedIn,
+    products,
+    subscription,
     redirectToCheckout,
     redirectToBillingPortal,
-    connectFinancialAccounts,
-    financialAccounts,
-    stripeCustomer,
-  } = useUser();
-  const { products, error } = useProducts();
+  } = useSubscription();
 
-  if (!isLoaded || !isSignedIn) {
+  if (!isLoaded) {
     return null;
   }
-
-  if (error) {
-    return <div>{JSON.stringify(error)}</div>;
-  }
-
-  if (!products) {
-    return null;
-  }
-
-  // TODO: Check whether `subscriptions` in this context only contains
-  // active subscriptions. If not, filter appropriately.
-  const productSubscriptions = stripeCustomer.subscriptions.data
-    .map((x) => {
-      return x.items.data.map((y) => y.price.product);
-    })
-    .flat()
-    .map((x) => products.find((y) => y.product.id === x));
 
   return (
     <>
       <Head>
-        <title>Clerk - Stripe integration POC</title>
+        <title>use-stripe-subscription</title>
       </Head>
 
-      <h1>Clerk - Stripe integration POC</h1>
+      <h1>use-stripe-subscription demo</h1>
 
-      <h2>Plan</h2>
-      {productSubscriptions.length === 0 ? (
-        <ProductList
-          products={products}
-          redirectToCheckout={redirectToCheckout}
-        />
-      ) : (
-        <>
-          <h2>You already have a subscription</h2>
-          {productSubscriptions.map((x) => (
-            <div>Product: {x.product.name}</div>
-          ))}
-          <button onClick={() => redirectToBillingPortal()}>Manage</button>
-        </>
-      )}
+      <h2>Plans</h2>
 
-      <h2>Financial accounts</h2>
-      <FinancialAccountsList financialAccounts={financialAccounts} />
+      {products.map(({ product, prices }) => (
+        <div key={product.id}>
+          <h4>{product.name}</h4>
+          <Gate unsubscribed>
+            {prices.map((price) => (
+              <button
+                key={price.id}
+                onClick={() => redirectToCheckout({ price: price.id })}
+              >
+                Purchase {price.unit_amount} {price.currency}
+              </button>
+            ))}
+          </Gate>
+          <Gate product={product}>Active plan</Gate>
+          <Gate product={product} negate>
+            <button onClick={() => redirectToBillingPortal()}>
+              Change plan
+            </button>
+          </Gate>
+        </div>
+      ))}
 
-      <button onClick={() => connectFinancialAccounts()}>Connect</button>
+      <UserButton />
     </>
   );
 }
-
-const FinancialAccountsList = ({ financialAccounts }) => {
-  return financialAccounts.data.map(
-    ({ id, institution_name, last4, balance, ...rest }) => (
-      <div key={id}>
-        <h4>
-          {institution_name} - Last 4: {last4}
-        </h4>
-        <div>{balance && balance.cash && JSON.stringify(balance.cash)}</div>
-      </div>
-    )
-  );
-};
-
-const ProductList = ({ products, redirectToCheckout }) => {
-  return products.map(({ product, price }) => (
-    <div key={product.id}>
-      <h4>
-        {product.name} - {price.unit_amount} {price.currency}
-      </h4>
-      <button
-        onClick={() =>
-          redirectToCheckout({
-            // Server needs to validate that this subscription
-            // can be purchased self-serve
-            line_items: [{ price: price.id, quantity: 1 }],
-          })
-        }
-      >
-        Purchase
-      </button>
-    </div>
-  ));
-};
