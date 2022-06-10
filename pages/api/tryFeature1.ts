@@ -1,5 +1,5 @@
+import { customerHasFeature } from "use-stripe-subscription";
 import { requireAuth } from "@clerk/nextjs/api";
-import { subscriptionHandler } from "use-stripe-subscription";
 import { findOrCreateCustomerId } from "../../utils/findOrCreateCustomerId";
 
 const handler = requireAuth(async (req, res) => {
@@ -11,9 +11,10 @@ const handler = requireAuth(async (req, res) => {
     clerkUserId: req.auth.userId,
   });
 
-  res.json(
-    await subscriptionHandler({ customerId, query: req.query, body: req.body })
-  );
+  if (await customerHasFeature({ customerId, feature: "feature1" })) {
+    res.send("Customer has feature1");
+  } else {
+    res.send("Customer does not have feature1");
+  }
 });
-
 export default handler;

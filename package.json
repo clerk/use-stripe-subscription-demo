@@ -17,7 +17,7 @@
     "react-dom": "18.1.0",
     "stripe": "^8.220.0",
     "swr": "^1.3.0",
-    "use-stripe-subscription": "file:../use-subscription"
+    "use-stripe-subscription": "^1.0.2"
   },
   "devDependencies": {
     "@types/react": "^18.0.8",
