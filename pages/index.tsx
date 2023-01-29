@@ -51,18 +51,18 @@ export default function Home() {
       ))}
       <h2>Features</h2>
       <div>
-        <Gate feature="feature1">Plan has "feature1"</Gate>
+        <Gate feature="feature1">Plan has &quot;feature1&quot;</Gate>
         <Gate feature="feature1" negate>
-          Plan does not have "feature1"
+          Plan does not have &quot;feature1&quot;
         </Gate>{" "}
         <button onClick={() => alertResponse("/api/tryFeature1")}>
           Test the backend!
         </button>
       </div>
       <div>
-        <Gate feature="feature2">Plan has "feature2"</Gate>
+        <Gate feature="feature2">Plan has &quot;feature2&quot;</Gate>
         <Gate feature="feature2" negate>
-          Plan does not have "feature2"
+          Plan does not have &quot;feature2&quot;
         </Gate>{" "}
         <button onClick={() => alertResponse("/api/tryFeature2")}>
           Test the backend!
