@@ -1,4 +1,4 @@
-import { users } from "@clerk/nextjs/api";
+import { clerkClient } from "@clerk/nextjs/server";
 import { stripeApiClient } from "use-stripe-subscription";
 
 export const findOrCreateCustomerId = async ({
@@ -6,7 +6,7 @@ export const findOrCreateCustomerId = async ({
 }: {
   clerkUserId: string;
 }) => {
-  let user = await users.getUser(clerkUserId);
+  let user = await clerkClient.users.getUser(clerkUserId);
   if (user.publicMetadata.stripeCustomerId) {
     return user.publicMetadata.stripeCustomerId as string;
   }
@@ -25,7 +25,7 @@ export const findOrCreateCustomerId = async ({
       idempotencyKey: user.id,
     }
   );
-  user = await users.updateUser(user.id, {
+  user = await clerkClient.users.updateUser(user.id, {
     publicMetadata: {
       stripeCustomerId: customerCreate.id,
     },
